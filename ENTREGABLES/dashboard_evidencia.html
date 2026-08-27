@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Evidencia Visual — Dashboard BNPL</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy: #0f2444;
+    --blue: #1d4ed8;
+    --blue-lt: #eff6ff;
+    --gray: #64748b;
+    --border: #e2e8f0;
+    --bg: #f8fafc;
+    --text: #1e293b;
+  }
+
+  @page {
+    size: A4;
+    margin: 14mm 16mm;
+    @bottom-center {
+      content: counter(page) " / " counter(pages);
+      font-size: 8pt;
+      font-family: 'Inter', sans-serif;
+      color: #94a3b8;
+    }
+  }
+
+  @media print {
+    body { font-size: 9pt; max-width: none; }
+    .page-break { page-break-before: always; }
+    .avoid-break { page-break-inside: avoid; }
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: white;
+    color: var(--text);
+    max-width: 210mm;
+    margin: 0 auto;
+    padding: 0;
+    line-height: 1.55;
+  }
+
+  /* ── Cover ─────────────────────────────────────── */
+  .cover {
+    background: linear-gradient(135deg, #0f2444 0%, #1a3a6b 50%, #0f4c81 100%);
+    color: white;
+    padding: 42px 36px;
+    min-height: 120mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-bottom: 0;
+  }
+
+  .cover-eyebrow {
+    font-size: 8pt;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+    margin-bottom: 10px;
+  }
+
+  .cover-title {
+    font-size: 20pt;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 10px;
+    color: white;
+  }
+
+  .cover-subtitle {
+    font-size: 10pt;
+    font-weight: 300;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 30px;
+    max-width: 500px;
+  }
+
+  .cover-meta {
+    font-size: 9pt;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.7;
+  }
+
+  .cover-meta strong { color: rgba(255,255,255,0.9); }
+
+  .cover-notice {
+    margin-top: 22px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-size: 8.5pt;
+    color: rgba(255,255,255,0.8);
+  }
+
+  .cover-notice strong { color: white; }
+
+  /* ── Headings ──────────────────────────────────── */
+  h1 {
+    font-size: 13pt;
+    font-weight: 700;
+    color: var(--navy);
+    margin: 24px 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--navy);
+    font-family: 'Inter', sans-serif;
+  }
+
+  h2 {
+    font-size: 10pt;
+    font-weight: 700;
+    color: var(--blue);
+    margin: 16px 0 7px;
+    font-family: 'Inter', sans-serif;
+  }
+
+  h3 {
+    font-size: 9pt;
+    font-weight: 600;
+    color: var(--navy);
+    margin: 12px 0 5px;
+  }
+
+  p { font-size: 9pt; margin-bottom: 7px; }
+
+  /* ── Panel card ────────────────────────────────── */
+  .panel-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 14px 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+
+  .panel-header {
+    background: var(--navy);
+    color: white;
+    padding: 9px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .panel-num {
+    background: rgba(255,255,255,0.15);
+    border-radius: 4px;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9pt;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .panel-title {
+    font-size: 9.5pt;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+
+  .panel-body {
+    padding: 14px 16px;
+    background: var(--bg);
+  }
+
+  .panel-body p { font-size: 8.5pt; color: var(--gray); }
+
+  .panel-img {
+    padding: 12px 16px 16px;
+    background: white;
+    text-align: center;
+  }
+
+  .panel-img img {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    max-height: 220px;
+    object-fit: contain;
+  }
+
+  .panel-img .cap {
+    font-size: 7.5pt;
+    color: var(--gray);
+    font-style: italic;
+    margin-top: 6px;
+    text-align: center;
+  }
+
+  /* ── Features grid ─────────────────────────────── */
+  .features {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin: 14px 0;
+  }
+
+  .feature {
+    background: var(--blue-lt);
+    border: 1px solid #bfdbfe;
+    border-radius: 7px;
+    padding: 10px 12px;
+  }
+
+  .feature-icon { font-size: 16pt; margin-bottom: 4px; }
+  .feature-title { font-size: 8.5pt; font-weight: 700; color: var(--navy); margin-bottom: 3px; }
+  .feature-desc { font-size: 7.5pt; color: var(--gray); }
+
+  /* ── Result callout ────────────────────────────── */
+  .result-callout {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-left: 4px solid #16a34a;
+    border-radius: 0 6px 6px 0;
+    padding: 10px 14px;
+    margin: 10px 0;
+    font-size: 8.5pt;
+  }
+
+  /* ── KPI grid ──────────────────────────────────── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin: 12px 0;
+  }
+
+  .kpi {
+    background: linear-gradient(135deg, var(--navy), #1e3a6e);
+    color: white;
+    border-radius: 7px;
+    padding: 10px 8px;
+    text-align: center;
+  }
+
+  .kpi-val { font-size: 16pt; font-weight: 800; color: #60a5fa; line-height: 1; }
+  .kpi-lbl { font-size: 6.5pt; font-weight: 500; color: rgba(255,255,255,0.6); text-transform: uppercase; margin-top: 2px; }
+
+  /* ── Access instructions ───────────────────────── */
+  .access-box {
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+    border-left: 4px solid #d97706;
+    border-radius: 0 6px 6px 0;
+    padding: 12px 16px;
+    margin: 14px 0;
+    font-size: 8.5pt;
+  }
+
+  code {
+    font-family: 'Courier New', monospace;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-size: 8pt;
+    color: var(--navy);
+  }
+
+  /* ── Footer ────────────────────────────────────── */
+  .footer {
+    margin-top: 28px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    font-size: 7.5pt;
+    color: var(--gray);
+    display: flex;
+    justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ PORTADA ══════════════ -->
+<div class="cover">
+  <div class="cover-eyebrow">ESPOL · Estadística Bayesiana · I Semestre 2026</div>
+  <div class="cover-title">Dashboard Interactivo<br>Análisis Bayesiano BNPL</div>
+  <div class="cover-subtitle">Evidencia visual y documentación de los 5 paneles del dashboard desarrollado en Streamlit + Plotly</div>
+  <div class="cover-meta">
+    <strong>Asignatura:</strong> Estadística Bayesiana — Escuela Superior Politécnica del Litoral (ESPOL)<br>
+    <strong>Proyecto:</strong> Inferencia Bayesiana sobre el Riesgo de Incumplimiento en Consumidores BNPL<br>
+    <strong>Equipo:</strong> Levi Parrales · José Villegas · Alessandro Paredes · Diego Benítez<br>
+    <strong>Tecnología:</strong> Streamlit v1.x + Plotly + PyMC v5 · Python 3.14
+  </div>
+  <div class="cover-notice">
+    <strong>Nota sobre esta evidencia:</strong> El dashboard es una aplicación web interactiva en tiempo real que se ejecuta localmente en <code>http://localhost:8501</code>. Este documento presenta la documentación visual de sus paneles, los resultados estadísticos que muestra, y las instrucciones de acceso. El dashboard completo —con todas sus interacciones, filtros y predicciones en tiempo real— solo está disponible ejecutando la aplicación Streamlit.
+  </div>
+</div>
+
+<!-- ══════════════ CONTENIDO ══════════════ -->
+<div style="padding: 0 20px 30px;">
+
+<h1>Descripción del Dashboard</h1>
+
+<p>El dashboard interactivo fue desarrollado en <strong>Streamlit</strong> con visualizaciones en <strong>Plotly</strong> y cálculos bayesianos en tiempo real usando <strong>NumPy/SciPy</strong>. Permite explorar los resultados del análisis bayesiano de manera visual e interactiva, con navegación por pestañas y controles deslizantes.</p>
+
+<div class="features avoid-break">
+  <div class="feature">
+    <div class="feature-icon">📊</div>
+    <div class="feature-title">5 Paneles temáticos</div>
+    <div class="feature-desc">Panorama general, perfil del consumidor, análisis bayesiano Normal-Normal, Beta-Binomial, y regresión MCMC.</div>
+  </div>
+  <div class="feature">
+    <div class="feature-icon">🔧</div>
+    <div class="feature-title">Filtros interactivos</div>
+    <div class="feature-desc">Selector de grupo de riesgo, estado laboral, rango de edad e ingreso. Los gráficos se actualizan en tiempo real.</div>
+  </div>
+  <div class="feature">
+    <div class="feature-icon">🤖</div>
+    <div class="feature-title">Predictor bayesiano</div>
+    <div class="feature-desc">Panel 5 permite ingresar características de un consumidor y calcular en tiempo real su Credit_Score predicho con IC 95% bayesiano.</div>
+  </div>
+</div>
+
+<!-- ── Acceso ─────────────────────────────────────── -->
+<div class="access-box avoid-break">
+  <strong>Cómo acceder al dashboard interactivo:</strong><br>
+  1. Abrir una terminal en la carpeta del proyecto.<br>
+  2. Ejecutar: <code>$env:PYTHONIOENCODING='utf-8'; python -m streamlit run dashboard/app.py --server.port 8501</code><br>
+  3. Abrir el navegador en: <code>http://localhost:8501</code><br>
+  <br>
+  El dashboard carga automáticamente el dataset (<code>BNPL_Financial_Default_Risk_Dataset.csv</code>) y los coeficientes de regresión MCMC (<code>analisis/tabla_coeficientes_regresion.csv</code>).
+</div>
+
+<!-- ── KPIs ─────────────────────────────────────── -->
+<h1 class="page-break">Panel 1 — Panorama General</h1>
+<div class="kpi-grid avoid-break">
+  <div class="kpi"><div class="kpi-val">10k</div><div class="kpi-lbl">Consumidores</div></div>
+  <div class="kpi"><div class="kpi-val">663.7</div><div class="kpi-lbl">Credit Score μ</div></div>
+  <div class="kpi"><div class="kpi-val">88.0%</div><div class="kpi-lbl">Bajo Riesgo</div></div>
+  <div class="kpi"><div class="kpi-val">20.6%</div><div class="kpi-lbl">Pagos Tardíos</div></div>
+</div>
+<p style="font-size:8pt; color:var(--gray);">El Panel 1 muestra KPIs clave con tarjetas de gradiente oscuro, distribución interactiva del Credit_Score con selector de variable, y gráficos de barras para las variables categóricas. Todos los gráficos son interactivos (hover, zoom, exportación PNG).</p>
+
+<!-- ── Panel 3 ─────────────────────────────────────── -->
+<h1>Panel 3 — Análisis Bayesiano Normal-Normal</h1>
+<div class="panel-card avoid-break">
+  <div class="panel-header">
+    <div class="panel-num">3</div>
+    <div class="panel-title">Inferencia bayesiana sobre el Credit_Score por grupo de riesgo</div>
+  </div>
+  <div class="panel-body">
+    <p>Permite ajustar interactivamente la media y varianza del prior. Muestra las distribuciones prior, likelihood y posterior superpuestas para cada grupo. Incluye la distribución posterior de la diferencia μ_Low − μ_High y la probabilidad bayesiana calculada en tiempo real.</p>
+  </div>
+  <div class="panel-img">
+    <img src="../figuras/fig6_normal_normal_posteriors.png" alt="Normal-Normal Posteriors">
+    <div class="cap">Distribuciones posteriores de μ_k por grupo de riesgo. El dashboard permite ajustar los hiperparámetros del prior en tiempo real.</div>
+  </div>
+</div>
+
+<div class="result-callout avoid-break">
+  <strong>Resultado mostrado en Panel 3:</strong> E[μ_Low − μ_High | datos] = <strong>108.99 puntos</strong> · IC 95%: [101.95, 116.03] · P(μ_High &lt; μ_Low | datos) = <strong>1.000000</strong>
+</div>
+
+<!-- ── Panel 4 ─────────────────────────────────────── -->
+<h1>Panel 4 — Modelo Beta-Binomial</h1>
+<div class="panel-card avoid-break">
+  <div class="panel-header">
+    <div class="panel-num">4</div>
+    <div class="panel-title">Comparación bayesiana de tasas de pago tardío por estado laboral</div>
+  </div>
+  <div class="panel-body">
+    <p>Muestra las distribuciones posteriores Beta de la tasa de pagos tardíos por grupo de empleo. Incluye la distribución posterior de la diferencia entre grupos y las probabilidades de superioridad calculadas por Monte Carlo.</p>
+  </div>
+  <div class="panel-img">
+    <img src="../figuras/fig11_beta_posteriors.png" alt="Beta Posteriors">
+    <div class="cap">Distribuciones posteriores Beta(1+X_k, 1+n_k−X_k) para cada grupo de estado laboral.</div>
+  </div>
+</div>
+
+<div class="result-callout avoid-break">
+  <strong>Resultado mostrado en Panel 4:</strong><br>
+  Employed: π = 15.0% · Freelancer: π = 26.5% · Student: π = 44.2% · <strong>Unemployed: π = 61.0%</strong><br>
+  P(π_Unemployed &gt; π_Employed | datos) = <strong>1.0000</strong> · Diferencia media: +0.460 pts, IC 95%: [0.417, 0.503]
+</div>
+
+<!-- ── Panel 5 ─────────────────────────────────────── -->
+<h1>Panel 5 — Regresión Bayesiana y Predictor Interactivo</h1>
+<div class="panel-card avoid-break">
+  <div class="panel-header">
+    <div class="panel-num">5</div>
+    <div class="panel-title">Coeficientes MCMC + Calculadora de Credit_Score bayesiana</div>
+  </div>
+  <div class="panel-body">
+    <p>Muestra el forest plot de los coeficientes bayesianos con IC 95% e IQR, cargados directamente desde <code>analisis/tabla_coeficientes_regresion.csv</code>. Incluye sliders interactivos para construir el perfil de un consumidor hipotético y calcular su Credit_Score predicho en tiempo real con distribución posterior muestral.</p>
+  </div>
+  <div class="panel-img">
+    <img src="../figuras/fig9_forest_plot_coeficientes.png" alt="Forest Plot">
+    <div class="cap">Forest plot de coeficientes bayesianos. El Panel 5 del dashboard permite además calcular predicciones para perfiles personalizados.</div>
+  </div>
+</div>
+
+<div class="result-callout avoid-break">
+  <strong>Predicciones disponibles en Panel 5 (tiempo real):</strong><br>
+  · Empleado sin riesgo: Credit_Score = <strong>706.2</strong>, IC 95%: [599, 814]<br>
+  · Estudiante típico: Credit_Score = <strong>615.1</strong>, IC 95%: [508, 724]<br>
+  · Desempleado con pagos tardíos: Credit_Score = <strong>527.4</strong>, IC 95%: [420, 638]
+</div>
+
+<!-- ── Verificación ─────────────────────────────────── -->
+<h1>Verificación de Funcionalidad</h1>
+<table style="width:100%; border-collapse:collapse; font-size:8.5pt; margin:12px 0;" class="avoid-break">
+  <thead style="background:var(--navy); color:white;">
+    <tr>
+      <th style="padding:6px 10px; text-align:left;">Funcionalidad</th>
+      <th style="padding:6px 10px; text-align:left;">Estado</th>
+      <th style="padding:6px 10px; text-align:left;">Notas</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td style="padding:5px 10px;">Carga del dataset CSV</td><td>✅ Funcional</td><td>10 000 filas, 11 columnas</td></tr>
+    <tr style="background:#f8fafc;"><td style="padding:5px 10px;">Panel 1 — KPIs y distribuciones</td><td>✅ Funcional</td><td>Selector de variable interactivo</td></tr>
+    <tr><td style="padding:5px 10px;">Panel 2 — Filtros de perfil</td><td>✅ Funcional</td><td>Filtros por riesgo, empleo, edad, ingreso</td></tr>
+    <tr style="background:#f8fafc;"><td style="padding:5px 10px;">Panel 3 — Normal-Normal bayesiano</td><td>✅ Funcional</td><td>Prior ajustable en tiempo real</td></tr>
+    <tr><td style="padding:5px 10px;">Panel 4 — Beta-Binomial</td><td>✅ Funcional</td><td>Comparaciones Monte Carlo en vivo</td></tr>
+    <tr style="background:#f8fafc;"><td style="padding:5px 10px;">Panel 5 — MCMC + Predictor</td><td>✅ Funcional</td><td>Carga tabla_coeficientes_regresion.csv</td></tr>
+    <tr><td style="padding:5px 10px;">Gráficos Plotly interactivos</td><td>✅ Funcional</td><td>Hover, zoom, exportación PNG</td></tr>
+    <tr style="background:#f8fafc;"><td style="padding:5px 10px;">Sidebar con filtros globales</td><td>✅ Funcional</td><td>Afectan visualizaciones en tiempo real</td></tr>
+  </tbody>
+</table>
+
+<div class="footer">
+  <span>ESPOL · Estadística Bayesiana · I Semestre 2026</span>
+  <span>L. Parrales · J. Villegas · A. Paredes · D. Benítez</span>
+</div>
+
+</div>
+</body>
+</html>

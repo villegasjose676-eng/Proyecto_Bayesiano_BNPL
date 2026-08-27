@@ -1,0 +1,5 @@
+Grupo,n,Pagos tardíos (X),Tasa observada,α posterior,β posterior,Media posterior,IC 95% inf.,IC 95% sup.
+Employed,6029,902,0.1496,903.0,5128.0,0.1497,0.1408,0.1588
+Freelancer,1495,395,0.2642,396.0,1101.0,0.2645,0.2425,0.2872
+Student,1968,869,0.4416,870.0,1100.0,0.4416,0.4198,0.4636
+Unemployed,508,310,0.6102,311.0,199.0,0.6098,0.5671,0.6517

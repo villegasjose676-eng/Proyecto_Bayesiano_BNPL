@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inferencia Bayesiana sobre el Riesgo de Incumplimiento en Consumidores BNPL</title>
+<style>
+  /* ── Reset & Base ─────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Source+Sans+3:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --navy:    #1a2744;
+    --blue:    #2563eb;
+    --blue-lt: #dbeafe;
+    --gold:    #b45309;
+    --gold-lt: #fef3c7;
+    --gray:    #64748b;
+    --gray-lt: #f8fafc;
+    --border:  #e2e8f0;
+    --text:    #1e293b;
+    --accent:  #0f4c81;
+  }
+
+  html { font-size: 10.5pt; }
+
+  body {
+    font-family: 'Source Serif 4', 'Georgia', serif;
+    color: var(--text);
+    line-height: 1.65;
+    background: white;
+    max-width: 210mm;
+    margin: 0 auto;
+    padding: 0;
+  }
+
+  /* ── Print settings ──────────────────────────────────────── */
+  @page {
+    size: A4;
+    margin: 18mm 20mm 18mm 22mm;
+    @bottom-center {
+      content: counter(page) " / " counter(pages);
+      font-size: 8pt;
+      color: #94a3b8;
+      font-family: 'Source Sans 3', sans-serif;
+    }
+  }
+
+  @media print {
+    body { max-width: none; font-size: 9.5pt; }
+    .no-print { display: none !important; }
+    .page-break { page-break-before: always; }
+    .avoid-break { page-break-inside: avoid; }
+    figure { page-break-inside: avoid; }
+    h2 { page-break-after: avoid; }
+    h3 { page-break-after: avoid; }
+  }
+
+  /* ── Cover page ──────────────────────────────────────────── */
+  .cover {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 40px 20px;
+    page-break-after: always;
+    background: linear-gradient(160deg, #0f2444 0%, #1a3a6b 60%, #0f4c81 100%);
+    color: white;
+    border-radius: 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -80px;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+  }
+
+  .cover::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; left: -60px;
+    width: 220px; height: 220px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.03);
+  }
+
+  .cover-institution {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 11pt;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.75);
+    margin-bottom: 6px;
+  }
+
+  .cover-course {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 9.5pt;
+    font-weight: 300;
+    color: rgba(255,255,255,0.6);
+    letter-spacing: 0.06em;
+    margin-bottom: 48px;
+  }
+
+  .cover-divider {
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, #60a5fa, #a78bfa);
+    margin: 0 auto 48px;
+    border-radius: 2px;
+  }
+
+  .cover-title {
+    font-family: 'Source Serif 4', serif;
+    font-size: 22pt;
+    font-weight: 700;
+    line-height: 1.25;
+    max-width: 600px;
+    margin-bottom: 16px;
+    color: white;
+  }
+
+  .cover-subtitle {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 11pt;
+    font-weight: 300;
+    color: rgba(255,255,255,0.65);
+    max-width: 520px;
+    margin-bottom: 64px;
+    line-height: 1.5;
+  }
+
+  .cover-authors-box {
+    background: rgba(255,255,255,0.09);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 10px;
+    padding: 22px 40px;
+    margin-bottom: 48px;
+    backdrop-filter: blur(4px);
+  }
+
+  .cover-authors-label {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 8pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 10px;
+  }
+
+  .cover-authors {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 10.5pt;
+    font-weight: 400;
+    color: rgba(255,255,255,0.9);
+    line-height: 1.7;
+  }
+
+  .cover-footer {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 8.5pt;
+    color: rgba(255,255,255,0.45);
+    letter-spacing: 0.04em;
+  }
+
+  /* ── Table of contents ───────────────────────────────────── */
+  .toc {
+    margin: 20px 0 32px;
+    padding: 20px 24px;
+    background: var(--gray-lt);
+    border-left: 4px solid var(--blue);
+    border-radius: 0 6px 6px 0;
+  }
+
+  .toc h2 {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 10pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--blue);
+    margin-bottom: 10px;
+    border: none;
+    padding: 0;
+  }
+
+  .toc ol {
+    margin: 0;
+    padding-left: 18px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 9.5pt;
+    color: var(--gray);
+    line-height: 1.9;
+  }
+
+  .toc ol li::marker { color: var(--blue); font-weight: 600; }
+
+  /* ── Headings ─────────────────────────────────────────────── */
+  h1 {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 16pt;
+    font-weight: 700;
+    color: var(--navy);
+    margin: 28px 0 10px;
+    padding-bottom: 8px;
+    border-bottom: 2.5px solid var(--navy);
+    letter-spacing: -0.01em;
+  }
+
+  h2 {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 12.5pt;
+    font-weight: 700;
+    color: var(--accent);
+    margin: 22px 0 8px;
+    padding-bottom: 5px;
+    border-bottom: 1.5px solid var(--blue-lt);
+  }
+
+  h3 {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 10.5pt;
+    font-weight: 600;
+    color: var(--navy);
+    margin: 16px 0 6px;
+  }
+
+  h4 {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 9.5pt;
+    font-weight: 600;
+    color: var(--gray);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 12px 0 5px;
+  }
+
+  /* ── Body text ───────────────────────────────────────────── */
+  p { margin-bottom: 9px; text-align: justify; hyphens: auto; }
+
+  strong { font-weight: 600; color: var(--navy); }
+
+  em { font-style: italic; }
+
+  a { color: var(--blue); text-decoration: none; }
+
+  ul, ol { margin: 6px 0 10px 20px; }
+
+  li { margin-bottom: 3px; }
+
+  /* ── Tables ──────────────────────────────────────────────── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 16px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 8.5pt;
+  }
+
+  thead tr {
+    background: var(--navy);
+    color: white;
+  }
+
+  thead th {
+    padding: 7px 9px;
+    text-align: left;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    font-size: 8pt;
+  }
+
+  tbody tr:nth-child(even) { background: var(--gray-lt); }
+  tbody tr:hover { background: var(--blue-lt); }
+
+  tbody td {
+    padding: 5.5px 9px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  .table-caption {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 8pt;
+    color: var(--gray);
+    font-style: italic;
+    margin: -10px 0 14px;
+    text-align: center;
+  }
+
+  /* ── Figures ─────────────────────────────────────────────── */
+  figure {
+    margin: 16px 0;
+    text-align: center;
+  }
+
+  figure img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  figcaption {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 8pt;
+    color: var(--gray);
+    margin-top: 5px;
+    font-style: italic;
+    text-align: center;
+  }
+
+  .fig-half {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 14px 0;
+  }
+
+  .fig-half figure { margin: 0; }
+
+  /* ── Callout boxes ───────────────────────────────────────── */
+  .callout {
+    border-left: 4px solid var(--blue);
+    background: var(--blue-lt);
+    padding: 10px 14px;
+    margin: 12px 0;
+    border-radius: 0 6px 6px 0;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 9pt;
+  }
+
+  .callout-result {
+    border-left-color: #16a34a;
+    background: #f0fdf4;
+  }
+
+  .callout-model {
+    border-left-color: var(--gold);
+    background: var(--gold-lt);
+  }
+
+  .callout strong { color: var(--navy); }
+
+  /* ── Math display ─────────────────────────────────────────── */
+  .math-block {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 8.5pt;
+    background: var(--gray-lt);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 14px;
+    margin: 8px 0;
+    color: var(--navy);
+    overflow-x: auto;
+  }
+
+  /* ── Section marker ──────────────────────────────────────── */
+  .section-tag {
+    display: inline-block;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 7.5pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: white;
+    background: var(--blue);
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin-bottom: 6px;
+  }
+
+  .highlight-box {
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    border: 1px solid #93c5fd;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 14px 0;
+  }
+
+  .highlight-box .h-title {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 8.5pt;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+
+  /* ── Footer ──────────────────────────────────────────────── */
+  .doc-footer {
+    margin-top: 30px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 7.5pt;
+    color: var(--gray);
+    text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* ── Content sections ────────────────────────────────────── */
+  .content { padding: 24px 0; }
+  .section { margin-bottom: 24px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     PORTADA
+══════════════════════════════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-institution">Escuela Superior Politécnica del Litoral — ESPOL</div>
+  <div class="cover-course">Estadística Bayesiana &nbsp;·&nbsp; I Semestre 2026</div>
+  <div class="cover-divider"></div>
+
+  <div class="cover-title">
+    Inferencia Bayesiana sobre el Riesgo de Incumplimiento en Consumidores de Servicios BNPL
+  </div>
+  <div class="cover-subtitle">
+    Análisis mediante modelos Normal-Normal, Regresión Lineal Bayesiana con MCMC y Beta-Binomial aplicados a 10 000 consumidores de servicios <em>Buy Now, Pay Later</em>
+  </div>
+
+  <div class="cover-authors-box">
+    <div class="cover-authors-label">Integrantes del equipo</div>
+    <div class="cover-authors">
+      Levi Parrales &nbsp;·&nbsp; José Villegas<br>
+      Alessandro Paredes &nbsp;·&nbsp; Diego Benítez
+    </div>
+  </div>
+
+  <div class="cover-footer">Proyecto Final de Curso &nbsp;·&nbsp; 2026</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     CUERPO DEL INFORME
+══════════════════════════════════════════════════════════ -->
+<div class="content">
+
+<!-- ── Tabla de Contenidos ──────────────────────────────── -->
+<div class="toc avoid-break">
+  <h2>Tabla de Contenidos</h2>
+  <ol>
+    <li>Introducción</li>
+    <li>Metodología</li>
+    <li>Análisis Descriptivo</li>
+    <li>Análisis Bayesiano</li>
+    <li>Análisis Ético e Impacto</li>
+    <li>Conclusiones</li>
+    <li>Referencias</li>
+  </ol>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     1. INTRODUCCIÓN
+══════════════════════════════════════════════════════ -->
+<h1>1. Introducción</h1>
+
+<p>El modelo de financiamiento <em>Buy Now, Pay Later</em> (BNPL) ha experimentado un crecimiento acelerado en los últimos años. Servicios como Klarna, Afterpay y Affirm permiten a los consumidores fraccionar sus compras de comercio electrónico en cuotas sin intereses, reduciendo la fricción en la decisión de compra. Sin embargo, este esquema ha generado preocupación creciente entre reguladores y académicos, particularmente por la acumulación silenciosa de deuda y la exposición financiera de consumidores vulnerables —especialmente jóvenes y personas con empleo informal— que pueden no tener plena conciencia de sus obligaciones crediticias acumuladas (Dobbie &amp; Song, 2015; Gathergood et al., 2019).</p>
+
+<p>A diferencia del crédito tradicional, los servicios BNPL generalmente no reportan a las agencias de crédito y no están sujetos a las mismas verificaciones de solvencia, lo que dificulta la evaluación del riesgo real de incumplimiento. El puntaje crediticio (<em>credit score</em>) sigue siendo la medida operativa estándar de solvencia financiera y constituye la variable cuantitativa más directamente relacionada con el riesgo de crédito en este contexto.</p>
+
+<p>El presente estudio aplica técnicas de inferencia bayesiana para analizar qué factores demográficos, laborales y de comportamiento financiero explican el puntaje crediticio de los usuarios de servicios BNPL, y cómo esa distribución difiere entre grupos de riesgo de incumplimiento.</p>
+
+<h3>Objetivos</h3>
+<ul>
+  <li><strong>General:</strong> Analizar los factores asociados al puntaje crediticio de los usuarios BNPL mediante inferencia bayesiana, cuantificando la incertidumbre y comparando distribuciones entre grupos de riesgo.</li>
+  <li>Estimar bayesianamente la distribución del Credit_Score por grupo de riesgo (Normal-Normal conjugado).</li>
+  <li>Identificar los predictores más relevantes del Credit_Score mediante regresión lineal bayesiana con MCMC.</li>
+  <li>Comparar la proporción de pagos tardíos entre grupos de estado laboral (Beta-Binomial).</li>
+  <li>Evaluar las implicaciones éticas del uso de modelos estadísticos en clasificación de riesgo crediticio.</li>
+</ul>
+
+<!-- ══════════════════════════════════════════════════════
+     2. METODOLOGÍA
+══════════════════════════════════════════════════════ -->
+<h1>2. Metodología</h1>
+
+<h2>2.1 Fuente de datos</h2>
+<p>Se utilizó el <em>BNPL Financial Default Risk Dataset</em> (Kaggle), un conjunto de datos sintético que contiene <strong>10 000 observaciones</strong> y <strong>11 variables</strong>, diseñado para simular el comportamiento crediticio de consumidores BNPL. La naturaleza sintética implica que las relaciones estadísticas son plausibles pero no extrapolables directamente a poblaciones reales.</p>
+
+<h2>2.2 Variable principal</h2>
+<p><strong>Credit_Score</strong> fue seleccionada como variable principal cuantitativa continua por ser la medida operativa estándar de solvencia crediticia, con distribución aproximadamente normal (media = 663.7, std = 76.2, rango 300–850), directamente relacionada con el riesgo de incumplimiento (r = −0.41 con Default_Risk) y sin los problemas de inflación de ceros que presentan otras variables del dataset.</p>
+
+<h2>2.3 Estrategia bayesiana: cadena argumental de tres modelos</h2>
+
+<div class="callout-model callout avoid-break">
+  <strong>Cadena argumental:</strong> (1) El modelo Normal-Normal motiva la importancia del Credit_Score mostrando diferencias entre grupos de riesgo → (2) La regresión bayesiana identifica qué factores explican esas diferencias → (3) El modelo Beta-Binomial profundiza en el mecanismo: el tipo de empleo determina la probabilidad de pagos tardíos, que a su vez deteriora el puntaje crediticio.
+</div>
+
+<table class="avoid-break">
+  <thead><tr><th>Paso</th><th>Modelo</th><th>Variable respuesta</th><th>Método</th><th>Propósito</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Normal-Normal</td><td>Credit_Score</td><td>Analítico (conjugado)</td><td>Comparar μ por grupo de riesgo</td></tr>
+    <tr><td>2</td><td>Reg. lineal bayesiana</td><td>Credit_Score</td><td>MCMC – NUTS (PyMC)</td><td>Identificar predictores</td></tr>
+    <tr><td>3</td><td>Beta-Binomial</td><td>Tasa pagos tardíos</td><td>Analítico + Monte Carlo</td><td>Comparar π por tipo de empleo</td></tr>
+  </tbody>
+</table>
+
+<h2>2.4 Especificación de priors</h2>
+<ul>
+  <li><strong>Normal-Normal:</strong> μ ~ Normal(650, 100²) — débilmente informativo, centrado en 650 pts (media genérica BNPL), ±196 pts al 95%.</li>
+  <li><strong>Regresión:</strong> β₀ ~ Normal(650, 100²), βⱼ ~ Normal(0, 50²), σ ~ HalfNormal(80) — priors débilmente informativos que permiten efectos de hasta ±100 pts al 95%.</li>
+  <li><strong>Beta-Binomial:</strong> π_k ~ Beta(1,1) = Uniforme(0,1) — no informativo sobre la tasa de pagos tardíos.</li>
+</ul>
+
+<h2>2.5 Tratamiento de datos faltantes</h2>
+<p>Las variables Credit_Score e Income_USD presentan ~3% de valores faltantes. Bajo el supuesto MCAR (Missing Completely At Random), se adoptó <strong>análisis de casos completos</strong>: 9 702 observaciones para los modelos 1 y 3, y 9 409 para la regresión (que requiere ambas variables).</p>
+
+<!-- ══════════════════════════════════════════════════════
+     3. ANÁLISIS DESCRIPTIVO  (≤ 3 páginas)
+══════════════════════════════════════════════════════ -->
+<h1 class="page-break">3. Análisis Descriptivo</h1>
+<div class="section-tag">Máx. 3 páginas</div>
+
+<h2>3.1 Estadísticas descriptivas</h2>
+
+<table class="avoid-break">
+  <thead><tr><th>Variable</th><th>n</th><th>Media</th><th>Std</th><th>Mín</th><th>Mediana</th><th>Máx</th><th>Sesgo</th></tr></thead>
+  <tbody>
+    <tr><td>Age</td><td>10 000</td><td>34.25</td><td>12.91</td><td>18</td><td>31</td><td>64</td><td>+0.63</td></tr>
+    <tr><td>Income_USD</td><td>9 695</td><td>53 981</td><td>29 797</td><td>5 000</td><td>58 596</td><td>139 452</td><td>−0.08</td></tr>
+    <tr><td><strong>Credit_Score ★</strong></td><td>9 702</td><td><strong>663.7</strong></td><td>76.2</td><td>300</td><td>673</td><td>850</td><td>−0.66</td></tr>
+    <tr><td>Total_BNPL_Active_Loans</td><td>10 000</td><td>2.32</td><td>1.85</td><td>0</td><td>2</td><td>10</td><td>+1.38</td></tr>
+    <tr><td>Total_BNPL_Debt_USD</td><td>10 000</td><td>348.8</td><td>315.1</td><td>0</td><td>262.5</td><td>2 731</td><td>+1.82</td></tr>
+    <tr><td>Average_Transaction_Value_USD</td><td>10 000</td><td>331.8</td><td>264.4</td><td>10</td><td>294.5</td><td>1 420</td><td>+0.79</td></tr>
+  </tbody>
+</table>
+<p class="table-caption">Tabla 1. Estadísticas descriptivas de las variables cuantitativas. ★ Variable principal del análisis bayesiano.</p>
+
+<h2>3.2 Distribución de variables categóricas</h2>
+<p>La variable <strong>Default_Risk</strong> muestra un marcado desbalance de clases: 88.0% Low, 6.8% Medium y 5.2% High, característico de datos crediticios reales. <strong>Employment_Status</strong> muestra predominancia de consumidores Employed (60.3%), seguidos de Student (19.7%), Freelancer (14.9%) y Unemployed (5.1%).</p>
+
+<figure class="avoid-break">
+  <img src="../figuras/fig2_categoricas.png" alt="Distribución de variables categóricas" style="max-height:200px;">
+  <figcaption>Figura 1. Distribución de las variables categóricas principales del dataset BNPL.</figcaption>
+</figure>
+
+<h2>3.3 Credit_Score por nivel de riesgo</h2>
+
+<div class="fig-half avoid-break">
+  <figure>
+    <img src="../figuras/fig3_credit_score_por_riesgo.png" alt="Credit Score por riesgo">
+    <figcaption>Figura 2. Distribución del Credit_Score por grupo de Default_Risk (violin + boxplot).</figcaption>
+  </figure>
+  <figure>
+    <img src="../figuras/fig1_distribuciones_continuas.png" alt="Distribuciones continuas">
+    <figcaption>Figura 3. Distribuciones de las variables cuantitativas principales.</figcaption>
+  </figure>
+</div>
+
+<p>El análisis exploratorio revela diferencias sustanciales en el Credit_Score según el nivel de riesgo:</p>
+<table class="avoid-break">
+  <thead><tr><th>Grupo</th><th>n</th><th>Media</th><th>Std</th><th>Mín</th><th>Máx</th></tr></thead>
+  <tbody>
+    <tr><td>Low</td><td>8 539</td><td>675.3</td><td>67.4</td><td>337</td><td>850</td></tr>
+    <tr><td>Medium</td><td>654</td><td>587.3</td><td>83.2</td><td>320</td><td>844</td></tr>
+    <tr><td>High</td><td>509</td><td>566.2</td><td>79.7</td><td>300</td><td>770</td></tr>
+  </tbody>
+</table>
+<p class="table-caption">Tabla 2. Credit_Score por grupo de Default_Risk. La diferencia Low–High es de ~109 puntos.</p>
+
+<h2>3.4 Correlaciones y relaciones entre variables</h2>
+<figure class="avoid-break">
+  <img src="../figuras/fig4_correlaciones.png" alt="Correlaciones" style="max-height:220px;">
+  <figcaption>Figura 4. Matriz de correlaciones de Pearson. Credit_Score muestra correlación positiva con Income_USD (r=0.51) y negativa con Default_Risk codificado ordinalmente (r=−0.41).</figcaption>
+</figure>
+
+<p>Destaca que Credit_Score tiene correlación prácticamente nula con Age (r=−0.002), Total_BNPL_Active_Loans (r=0.015) y Total_BNPL_Debt_USD (r=0.008) — resultado que el análisis bayesiano posterior confirmará: son las variables categóricas (estado laboral e historial de pagos) las que explican la variación del puntaje crediticio.</p>
+
+<!-- ══════════════════════════════════════════════════════
+     4. ANÁLISIS BAYESIANO  (≤ 7 páginas)
+══════════════════════════════════════════════════════ -->
+<h1 class="page-break">4. Análisis Bayesiano</h1>
+<div class="section-tag">Máx. 7 páginas</div>
+
+<!-- ── 4.1 Normal-Normal ─────────────────────────────── -->
+<h2>4.1 Modelo Paso 1 — Normal-Normal (solución analítica)</h2>
+
+<div class="callout-model callout avoid-break">
+  <strong>Especificación:</strong><br>
+  Verosimilitud: Y_i | μ_k, σ_k² ~ Normal(μ_k, σ_k²) &nbsp;·&nbsp;
+  Prior: μ_k ~ Normal(μ₀=650, τ₀²=100²)<br>
+  Posterior (conjugado): μ_k | y_k ~ Normal(μₙ, τₙ²) &nbsp;·&nbsp;
+  τₙ² = (1/τ₀² + n_k/σ̂_k²)⁻¹ &nbsp;·&nbsp;
+  μₙ = τₙ² (μ₀/τ₀² + n_k·ȳ_k/σ̂_k²)
+</div>
+
+<table class="avoid-break">
+  <thead><tr><th>Grupo</th><th>n</th><th>ȳ</th><th>μₙ (media post.)</th><th>τₙ (std post.)</th><th>IC 95% inf.</th><th>IC 95% sup.</th></tr></thead>
+  <tbody>
+    <tr><td>Low</td><td>8 539</td><td>675.33</td><td><strong>675.33</strong></td><td>0.7296</td><td>673.90</td><td>676.76</td></tr>
+    <tr><td>Medium</td><td>654</td><td>587.32</td><td><strong>587.39</strong></td><td>3.2502</td><td>581.02</td><td>593.76</td></tr>
+    <tr><td>High</td><td>509</td><td>566.23</td><td><strong>566.33</strong></td><td>3.5301</td><td>559.42</td><td>573.25</td></tr>
+  </tbody>
+</table>
+<p class="table-caption">Tabla 3. Distribuciones posteriores del Credit_Score por grupo. Prior: Normal(650, 100²).</p>
+
+<div class="fig-half avoid-break">
+  <figure>
+    <img src="../figuras/fig6_normal_normal_posteriors.png" alt="Posteriors Normal-Normal">
+    <figcaption>Figura 5. Distribuciones posteriores de μ por grupo de riesgo. Los IC 95% son extremadamente estrechos dado el tamaño muestral.</figcaption>
+  </figure>
+  <figure>
+    <img src="../figuras/fig7_comparacion_grupos.png" alt="Comparación grupos">
+    <figcaption>Figura 6. Distribución posterior de la diferencia μ_Low − μ_High.</figcaption>
+  </figure>
+</div>
+
+<div class="callout callout-result avoid-break">
+  <strong>Comparaciones bayesianas (Monte Carlo, N=500 000):</strong><br>
+  P(μ_High &lt; μ_Low | datos) = <strong>1.000000</strong> &nbsp;·&nbsp;
+  P(μ_Med &lt; μ_Low | datos) = <strong>1.000000</strong> &nbsp;·&nbsp;
+  P(μ_High &lt; μ_Med | datos) = 0.999990<br>
+  <strong>E[μ_Low − μ_High | datos] = 108.99 puntos</strong>, IC 95%: [101.95, 116.03]
+  <br><em>Interpretación: existe certeza posterior prácticamente total de que el Credit_Score promedio de los consumidores de bajo riesgo supera al de alto riesgo en al menos 102 puntos — una diferencia con consecuencias directas sobre el acceso al crédito.</em>
+</div>
+
+<!-- ── 4.2 Regresión MCMC ──────────────────────────── -->
+<h2>4.2 Modelo Paso 2 — Regresión Lineal Bayesiana con MCMC</h2>
+
+<div class="callout-model callout avoid-break">
+  <strong>Especificación:</strong> Credit_Score_i ~ Normal(μᵢ, σ²) &nbsp;·&nbsp;
+  μᵢ = β₀ + β₁·Income_std + β₂·Age_std + β₃·Loans_std + β₄·AvgTx_std + β₅·LatePayment + γ_Employment<br>
+  <strong>Priors:</strong> β₀ ~ N(650, 100²) · βⱼ ~ N(0, 50²) · σ ~ HalfNormal(80) &nbsp;·&nbsp;
+  <strong>MCMC:</strong> NUTS · 4 cadenas · 1 000 tune + 1 000 draws = 4 000 muestras totales
+</div>
+
+<h3>Diagnóstico de convergencia</h3>
+<div class="highlight-box avoid-break">
+  <div class="h-title">Criterios de Gelman-Rubin</div>
+  <strong>R̂ máximo:</strong> 1.0013 &lt; 1.01 ✓ &nbsp;·&nbsp;
+  <strong>ESS bulk mínimo:</strong> 2 675 &gt; 400 ✓ &nbsp;·&nbsp;
+  <strong>Divergencias:</strong> 0 en 4 cadenas ✓ &nbsp;·&nbsp;
+  <strong>Tiempo de muestreo:</strong> ~48–77 seg.
+  <br>→ <em>Convergencia alcanzada en todos los parámetros. El muestreo NUTS exploró eficientemente el espacio posterior.</em>
+</div>
+
+<figure class="avoid-break">
+  <img src="../figuras/fig8_trazas_mcmc.png" alt="Trazas MCMC" style="max-height:250px;">
+  <figcaption>Figura 7. Trazas MCMC y distribuciones marginales posteriores para los 4 parámetros clave. Las trazas son estacionarias, confirmando convergencia.</figcaption>
+</figure>
+
+<h3>Coeficientes bayesianos</h3>
+
+<table class="avoid-break">
+  <thead><tr><th>Parámetro</th><th>Media post.</th><th>Std</th><th>IC 95% inf.</th><th>IC 95% sup.</th><th>R̂</th><th>Significativo</th></tr></thead>
+  <tbody>
+    <tr><td>Intercepto (β₀)</td><td>705.65</td><td>0.91</td><td>703.87</td><td>707.46</td><td>1.001</td><td>—</td></tr>
+    <tr><td>Ingreso anual (std)</td><td>+1.32</td><td>0.92</td><td>−0.51</td><td>+3.16</td><td>1.000</td><td>❌ IC incluye 0</td></tr>
+    <tr><td>Edad (std)</td><td>+0.18</td><td>0.56</td><td>−0.91</td><td>+1.27</td><td>1.000</td><td>❌ IC incluye 0</td></tr>
+    <tr><td>Préstamos activos (std)</td><td>+0.80</td><td>0.56</td><td>−0.31</td><td>+1.92</td><td>1.000</td><td>❌ IC incluye 0</td></tr>
+    <tr><td>Val. transacción (std)</td><td>−0.30</td><td>0.57</td><td>−1.41</td><td>+0.81</td><td>1.001</td><td>❌ IC incluye 0</td></tr>
+    <tr style="background:#fef2f2;"><td><strong>Pago tardío (Sí=1)</strong></td><td><strong>−43.41</strong></td><td>1.36</td><td><strong>−46.18</strong></td><td><strong>−40.80</strong></td><td>1.000</td><td>✅ Fuerte negativo</td></tr>
+    <tr style="background:#fef2f2;"><td><strong>Status: Student</strong></td><td><strong>−88.62</strong></td><td>2.32</td><td><strong>−93.07</strong></td><td><strong>−84.06</strong></td><td>1.001</td><td>✅ Muy fuerte negativo</td></tr>
+    <tr style="background:#fef2f2;"><td><strong>Status: Freelancer</strong></td><td><strong>−47.15</strong></td><td>1.70</td><td><strong>−50.50</strong></td><td><strong>−43.80</strong></td><td>1.000</td><td>✅ Fuerte negativo</td></tr>
+    <tr style="background:#fef2f2;"><td><strong>Status: Unemployed</strong></td><td><strong>−133.92</strong></td><td>3.28</td><td><strong>−140.42</strong></td><td><strong>−127.35</strong></td><td>1.001</td><td>✅ El más fuerte</td></tr>
+    <tr><td>σ residual</td><td>55.04</td><td>0.41</td><td>54.23</td><td>55.84</td><td>1.000</td><td>—</td></tr>
+  </tbody>
+</table>
+<p class="table-caption">Tabla 4. Resumen del posterior — Regresión lineal bayesiana. Referencia: Employed, sin historial de pago tardío.</p>
+
+<div class="fig-half avoid-break">
+  <figure>
+    <img src="../figuras/fig9_forest_plot_coeficientes.png" alt="Forest plot">
+    <figcaption>Figura 8. Forest plot de coeficientes bayesianos con IC 95% e IQR. Rojo = efecto negativo significativo; gris = IC incluye 0.</figcaption>
+  </figure>
+  <figure>
+    <img src="../figuras/fig10_posterior_predictive.png" alt="PPC">
+    <figcaption>Figura 9. Posterior Predictive Check. Las réplicas del modelo son consistentes con los datos observados.</figcaption>
+  </figure>
+</div>
+
+<div class="callout callout-result avoid-break">
+  <strong>Hallazgo central:</strong> Las variables continuas económicas (ingreso, edad, préstamos, transacciones) no tienen efecto estadísticamente significativo sobre el Credit_Score una vez controladas las variables categóricas. El estado laboral y el historial de pagos tardíos son los únicos predictores con evidencia bayesiana de efecto real.
+  <ul style="margin-top:5px;">
+    <li>Ser <strong>desempleado</strong> reduce el Credit_Score en 134 puntos (IC 95%: [−140, −127]).</li>
+    <li>Ser <strong>estudiante</strong> lo reduce en 89 puntos (IC 95%: [−93, −84]).</li>
+    <li>Tener un <strong>historial de pago tardío</strong> lo reduce en 43 puntos adicionales (IC 95%: [−46, −41]).</li>
+  </ul>
+</div>
+
+<h3>Predicción bayesiana para perfiles representativos</h3>
+
+<table class="avoid-break">
+  <thead><tr><th>Perfil</th><th>Descripción</th><th>Credit Score (media)</th><th>IC 95%</th></tr></thead>
+  <tbody>
+    <tr><td>Empleado sin riesgo</td><td>Income=$75k, Edad=35, Préstamos=1, Sin pago tardío</td><td><strong>706.2</strong></td><td>[599, 814]</td></tr>
+    <tr><td>Estudiante típico</td><td>Income=$12k, Edad=22, Préstamos=2, Sin pago tardío</td><td><strong>615.1</strong></td><td>[508, 724]</td></tr>
+    <tr><td>Desempleado c/pagos tardíos</td><td>Income=$15k, Edad=27, Préstamos=4, Con pago tardío</td><td><strong>527.4</strong></td><td>[420, 638]</td></tr>
+  </tbody>
+</table>
+<p class="table-caption">Tabla 5. Predicciones bayesianas. Los IC 95% anchos reflejan honestamente la incertidumbre individual — ventaja clave sobre la estimación puntual frecuentista.</p>
+
+<!-- ── 4.3 Beta-Binomial ──────────────────────────── -->
+<h2>4.3 Modelo Paso 3 — Beta-Binomial (solución analítica)</h2>
+
+<div class="callout-model callout avoid-break">
+  <strong>Especificación:</strong> X_k | π_k ~ Binomial(n_k, π_k) &nbsp;·&nbsp;
+  Prior: π_k ~ Beta(1, 1) = Uniforme(0, 1) — no informativo<br>
+  Posterior (conjugado): π_k | datos ~ Beta(1 + X_k, 1 + n_k − X_k)
+</div>
+
+<table class="avoid-break">
+  <thead><tr><th>Grupo</th><th>n</th><th>Pagos tardíos</th><th>Tasa obs.</th><th>π posterior (media)</th><th>IC 95%</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Employed</strong></td><td>6 029</td><td>902</td><td>0.150</td><td><strong>0.1497</strong></td><td>[0.141, 0.159]</td></tr>
+    <tr><td>Freelancer</td><td>1 495</td><td>395</td><td>0.264</td><td><strong>0.2645</strong></td><td>[0.243, 0.287]</td></tr>
+    <tr><td>Student</td><td>1 968</td><td>869</td><td>0.442</td><td><strong>0.4416</strong></td><td>[0.420, 0.464]</td></tr>
+    <tr style="background:#fef2f2;"><td><strong>Unemployed</strong></td><td>508</td><td>310</td><td>0.610</td><td><strong>0.6098</strong></td><td>[0.567, 0.652]</td></tr>
+  </tbody>
+</table>
+<p class="table-caption">Tabla 6. Distribuciones posteriores de la tasa de pagos tardíos por estado laboral. Prior: Beta(1,1).</p>
+
+<div class="fig-half avoid-break">
+  <figure>
+    <img src="../figuras/fig11_beta_posteriors.png" alt="Beta posteriors">
+    <figcaption>Figura 10. Distribuciones posteriores de π_k por estado laboral. Las distribuciones no se solapan visualmente, anticipando diferencias ciertas.</figcaption>
+  </figure>
+  <figure>
+    <img src="../figuras/fig12_comparaciones_proporciones.png" alt="Comparaciones proporciones">
+    <figcaption>Figura 11. Distribución posterior de la diferencia (π_k − π_Employed) para cada grupo vs. empleados formales.</figcaption>
+  </figure>
+</div>
+
+<div class="callout callout-result avoid-break">
+  <strong>Comparaciones bayesianas (Monte Carlo, N=500 000) — referencia: Employed:</strong><br>
+  P(π_Freelancer &gt; π_Employed | datos) = <strong>1.0000</strong>, diferencia media: +0.1148, IC 95%: [0.091, 0.139]<br>
+  P(π_Student &gt; π_Employed | datos) = <strong>1.0000</strong>, diferencia media: +0.2919, IC 95%: [0.268, 0.316]<br>
+  P(π_Unemployed &gt; π_Employed | datos) = <strong>1.0000</strong>, diferencia media: +0.4601, IC 95%: [0.417, 0.503]<br>
+  <em>Los desempleados tienen una tasa de pagos tardíos cuatro veces mayor que los empleados formales (61% vs 15%), con certeza posterior = 1. Esto cierra la cadena causal: Employment_Status → Late_Payment → Credit_Score bajo → Default_Risk alto.</em>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     5. ANÁLISIS ÉTICO
+══════════════════════════════════════════════════════ -->
+<h1 class="page-break">5. Análisis Ético e Impacto</h1>
+
+<h2>5.1 Impactos de la solución estadística</h2>
+<p><strong>Impacto económico:</strong> Los modelos de scoring crediticio determinan el acceso de millones de consumidores a servicios financieros. Un modelo impreciso puede excluir injustamente a consumidores solventes o aprobar crédito a consumidores en riesgo real, generando costos económicos directos en ambos casos.</p>
+<p><strong>Impacto social:</strong> El análisis revela diferencias sistemáticas en el puntaje crediticio asociadas al estado laboral. Si estos modelos se usan en decisiones automáticas, pueden perpetuar desigualdades estructurales: un estudiante o trabajador independiente podría ser rechazado no por su comportamiento de pago, sino por pertenecer a un grupo estadísticamente de mayor riesgo (<em>discriminación estadística</em>).</p>
+<p><strong>Impacto ético:</strong> La transparencia sobre las limitaciones del modelo (datos sintéticos, linealidad asumida, posible circularidad entre Credit_Score y Default_Risk) es un imperativo de integridad científica.</p>
+
+<h2>5.2 Análisis de escenarios</h2>
+<ul>
+  <li><strong>Corto plazo:</strong> Si una empresa BNPL adoptara este modelo para decisiones de aprobación, los desempleados o estudiantes recibirían tasas más altas o serían rechazados — lo que puede agravar la exclusión financiera de poblaciones vulnerables.</li>
+  <li><strong>Mediano plazo:</strong> La normalización de modelos bayesianos en BNPL puede reducir la heterogeneidad en la evaluación crediticia, aumentando la eficiencia del mercado pero reduciendo la flexibilidad para casos atípicos.</li>
+  <li><strong>Largo plazo:</strong> Si los modelos entrenan en datos que ya reflejan discriminación histórica, reproducirán esos patrones (sesgo de confirmación), creando ciclos de exclusión auto-perpetuantes.</li>
+</ul>
+
+<h2>5.3 Dilema ético central</h2>
+<p>¿Tiene una empresa el derecho de usar el tipo de empleo como factor en un modelo de riesgo crediticio? Desde la perspectiva de eficiencia del mercado, sí — estas variables tienen poder predictivo estadístico. Desde la perspectiva de equidad y derechos civiles, no — las personas no deberían ser penalizadas por características que no controlaron. Los reguladores financieros, en colaboración con comités éticos interdisciplinarios, son los actores que deben determinar qué variables son permisibles.</p>
+
+<!-- ══════════════════════════════════════════════════════
+     6. CONCLUSIONES
+══════════════════════════════════════════════════════ -->
+<h1>6. Conclusiones</h1>
+
+<div class="callout callout-result avoid-break">
+  <strong>Cadena causal integrada:</strong> Estado laboral → determina el comportamiento de pago → que deteriora el historial crediticio → que reduce el Credit_Score → que eleva el riesgo de incumplimiento. El desempleo es el factor de riesgo más potente en toda la cadena.
+</div>
+
+<ol>
+  <li><strong>Diferencia entre grupos confirmada con certeza bayesiana:</strong> Los consumidores de alto riesgo tienen un Credit_Score promedio 108.99 puntos inferior al de los de bajo riesgo (IC 95%: [101.95, 116.03]). La probabilidad posterior de que esta diferencia sea real es 1.000000.</li>
+  <li><strong>Las variables categóricas dominan sobre las continuas:</strong> El modelo de regresión bayesiana con MCMC (R̂ máx. = 1.0013, ESS mín. = 2 675, 0 divergencias) demuestra que el ingreso, la edad y el número de préstamos no tienen efecto estadísticamente significativo. En contraste, ser desempleado reduce el Credit_Score en 134 puntos y tener historial de pagos tardíos lo reduce en 43 puntos adicionales.</li>
+  <li><strong>El estado laboral es el predictor más poderoso de comportamiento de pago:</strong> El modelo Beta-Binomial confirma con probabilidad posterior 1.0000 que los desempleados tienen una tasa de pagos tardíos (61%) cuatro veces mayor que los empleados formales (15%), cerrando la cadena causal del análisis.</li>
+  <li><strong>Limitaciones:</strong> Dataset sintético sin contexto geográfico, linealidad asumida, posible circularidad entre Credit_Score y Default_Risk.</li>
+  <li><strong>Líneas futuras:</strong> Validar con datos reales, explorar modelos jerárquicos bayesianos, incorporar métricas de equidad (<em>fairness</em>) en la evaluación.</li>
+</ol>
+
+<!-- ══════════════════════════════════════════════════════
+     7. REFERENCIAS
+══════════════════════════════════════════════════════ -->
+<h1>7. Referencias</h1>
+
+<p style="text-indent:-20px; padding-left:20px; margin-bottom:8px; font-family: 'Source Sans 3', sans-serif; font-size:9pt;">
+Dobbie, W., &amp; Song, J. (2015). Debt relief and debtor outcomes: Measuring the effects of consumer bankruptcy protection. <em>American Economic Review, 105</em>(3), 1272–1311.
+</p>
+<p style="text-indent:-20px; padding-left:20px; margin-bottom:8px; font-family: 'Source Sans 3', sans-serif; font-size:9pt;">
+Gathergood, J., Mahoney, N., Stewart, N., &amp; Weber, J. (2019). How do individuals repay their debt? The balance-matching heuristic. <em>American Economic Review, 109</em>(3), 844–875.
+</p>
+<p style="text-indent:-20px; padding-left:20px; margin-bottom:8px; font-family: 'Source Sans 3', sans-serif; font-size:9pt;">
+Gelman, A., Carlin, J. B., Stern, H. S., Dunson, D. B., Vehtari, A., &amp; Rubin, D. B. (2013). <em>Bayesian Data Analysis</em> (3rd ed.). Chapman and Hall/CRC.
+</p>
+<p style="text-indent:-20px; padding-left:20px; margin-bottom:8px; font-family: 'Source Sans 3', sans-serif; font-size:9pt;">
+PyMC Development Team. (2023). <em>PyMC: Probabilistic programming in Python</em> (v5). https://www.pymc.io
+</p>
+<p style="text-indent:-20px; padding-left:20px; margin-bottom:8px; font-family: 'Source Sans 3', sans-serif; font-size:9pt;">
+Salvatier, J., Wiecki, T. V., &amp; Fonnesbeck, C. (2016). Probabilistic programming in Python using PyMC3. <em>PeerJ Computer Science, 2</em>, e55.
+</p>
+<p style="text-indent:-20px; padding-left:20px; margin-bottom:8px; font-family: 'Source Sans 3', sans-serif; font-size:9pt;">
+Vehtari, A., Gelman, A., Simpson, D., Carpenter, B., &amp; Bürkner, P.-C. (2021). Rank-normalization, folding, and localization: An improved R̂ for assessing convergence of MCMC. <em>Bayesian Analysis, 16</em>(2), 667–718.
+</p>
+
+<div class="doc-footer">
+  <span>ESPOL · Estadística Bayesiana · I Semestre 2026</span>
+  <span>L. Parrales · J. Villegas · A. Paredes · D. Benítez</span>
+  <span>Inferencia Bayesiana sobre Riesgo BNPL</span>
+</div>
+
+</div><!-- /content -->
+</body>
+</html>

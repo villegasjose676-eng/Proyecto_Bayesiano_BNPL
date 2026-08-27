@@ -1,0 +1,4 @@
+Grupo,n,Media muestral (ȳ),Std muestral (σ),Media posterior (μₙ),Std posterior (τₙ),IC 95% inferior,IC 95% superior,Amplitud IC
+Low,8539,675.33,67.42,675.3261,0.7296,673.9,676.76,2.86
+Medium,654,587.32,83.16,587.3873,3.2502,581.02,593.76,12.74
+High,509,566.23,79.69,566.3343,3.5301,559.42,573.25,13.84

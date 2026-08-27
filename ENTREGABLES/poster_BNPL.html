@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Póster — Inferencia Bayesiana sobre Riesgo BNPL</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:    #0f2444;
+    --blue:    #1d4ed8;
+    --blue2:   #3b82f6;
+    --blue-lt: #eff6ff;
+    --teal:    #0891b2;
+    --gold:    #d97706;
+    --red:     #dc2626;
+    --green:   #16a34a;
+    --gray:    #64748b;
+    --text:    #1e293b;
+    --bg:      #f8fafc;
+    --white:   #ffffff;
+    --border:  #e2e8f0;
+  }
+
+  @page {
+    size: A1 landscape;
+    margin: 10mm;
+  }
+
+  @media print {
+    body { zoom: 1; }
+    .poster { page-break-inside: avoid; }
+  }
+
+  body {
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    background: #e8edf5;
+    padding: 12px;
+    min-height: 100vh;
+  }
+
+  /* ── Main poster layout ──────────────────────────── */
+  .poster {
+    background: white;
+    width: 100%;
+    max-width: 1188px; /* A1 landscape proportional */
+    margin: 0 auto;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.15);
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+  }
+
+  /* ── Header ──────────────────────────────────────── */
+  .header {
+    background: linear-gradient(135deg, #0f2444 0%, #1a3a6b 50%, #0f4c81 100%);
+    color: white;
+    padding: 22px 32px 18px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 20px;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+  }
+
+  .header-logo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 120px;
+  }
+
+  .logo-circle {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.12);
+    border: 2px solid rgba(255,255,255,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 800;
+    color: white;
+  }
+
+  .logo-text {
+    font-size: 7.5pt;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.7);
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  .header-center { text-align: center; }
+
+  .header-tag {
+    font-size: 7.5pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(255,255,255,0.55);
+    margin-bottom: 5px;
+  }
+
+  .header-title {
+    font-size: 18pt;
+    font-weight: 800;
+    line-height: 1.2;
+    color: white;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+
+  .header-subtitle {
+    font-size: 9pt;
+    font-weight: 300;
+    color: rgba(255,255,255,0.65);
+    max-width: 680px;
+    margin: 0 auto;
+    line-height: 1.45;
+  }
+
+  .header-right {
+    text-align: right;
+    min-width: 160px;
+  }
+
+  .header-course {
+    font-size: 8pt;
+    font-weight: 600;
+    color: rgba(255,255,255,0.55);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: 6px;
+  }
+
+  .header-authors {
+    font-size: 8pt;
+    font-weight: 400;
+    color: rgba(255,255,255,0.8);
+    line-height: 1.6;
+  }
+
+  .badge-row {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .badge {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 7pt;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: rgba(255,255,255,0.8);
+  }
+
+  /* ── Body grid ───────────────────────────────────── */
+  .body {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 0;
+    padding: 0;
+    background: #f1f5f9;
+  }
+
+  .col {
+    padding: 14px 14px;
+    background: white;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .col:last-child { border-right: none; }
+
+  /* ── Cards / Blocks ──────────────────────────────── */
+  .card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 11px 13px;
+  }
+
+  .card-blue {
+    background: var(--blue-lt);
+    border-color: #bfdbfe;
+  }
+
+  .card-navy {
+    background: var(--navy);
+    color: white;
+    border-color: var(--navy);
+  }
+
+  .card-result {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+    border-left: 4px solid var(--green);
+  }
+
+  .card-warn {
+    background: #fef3c7;
+    border-color: #fde68a;
+    border-left: 4px solid var(--gold);
+  }
+
+  .card-danger {
+    background: #fef2f2;
+    border-color: #fecaca;
+    border-left: 4px solid var(--red);
+  }
+
+  /* ── Card components ─────────────────────────────── */
+  .card-label {
+    font-size: 7pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--blue);
+    margin-bottom: 5px;
+  }
+
+  .card-navy .card-label { color: rgba(255,255,255,0.55); }
+
+  .card-title {
+    font-size: 9.5pt;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 5px;
+  }
+
+  .card-navy .card-title { color: white; }
+
+  p, li {
+    font-size: 8pt;
+    line-height: 1.5;
+    color: var(--text);
+  }
+
+  .card-navy p, .card-navy li { color: rgba(255,255,255,0.85); }
+
+  ul { padding-left: 14px; }
+  li { margin-bottom: 2px; }
+
+  /* ── Section headings ────────────────────────────── */
+  .sec-title {
+    font-size: 9pt;
+    font-weight: 700;
+    color: var(--navy);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 6px 10px;
+    background: linear-gradient(90deg, var(--blue-lt), transparent);
+    border-left: 3px solid var(--blue);
+    border-radius: 0 4px 4px 0;
+    margin-bottom: 2px;
+  }
+
+  /* ── KPI stats ───────────────────────────────────── */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .kpi {
+    background: linear-gradient(135deg, var(--navy), #1e3a6e);
+    color: white;
+    border-radius: 7px;
+    padding: 9px 10px;
+    text-align: center;
+  }
+
+  .kpi-val {
+    font-size: 15pt;
+    font-weight: 800;
+    color: #60a5fa;
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+
+  .kpi-lbl {
+    font-size: 6.5pt;
+    font-weight: 500;
+    color: rgba(255,255,255,0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── Result numbers ──────────────────────────────── */
+  .result-big {
+    font-size: 20pt;
+    font-weight: 800;
+    color: var(--red);
+    line-height: 1;
+  }
+
+  .result-green { color: var(--green); }
+  .result-blue  { color: var(--blue); }
+
+  /* ── Tables ──────────────────────────────────────── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 7.5pt;
+  }
+
+  thead tr { background: var(--navy); color: white; }
+  thead th { padding: 5px 6px; text-align: left; font-weight: 600; font-size: 7pt; }
+  tbody tr:nth-child(even) { background: #f8fafc; }
+  tbody td { padding: 4px 6px; border-bottom: 1px solid var(--border); }
+  .highlight-row { background: #fee2e2 !important; font-weight: 600; }
+  .ok-row { background: #f0fdf4 !important; }
+
+  /* ── Images ──────────────────────────────────────── */
+  img {
+    max-width: 100%;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    display: block;
+    margin: 0 auto;
+  }
+
+  .img-cap {
+    font-size: 6.5pt;
+    color: var(--gray);
+    text-align: center;
+    margin-top: 3px;
+    font-style: italic;
+  }
+
+  /* ── Chain diagram ───────────────────────────────── */
+  .chain {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 8px 4px;
+  }
+
+  .chain-box {
+    background: var(--blue);
+    color: white;
+    border-radius: 5px;
+    padding: 5px 9px;
+    font-size: 7pt;
+    font-weight: 600;
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  .chain-arrow {
+    color: var(--gray);
+    font-size: 12pt;
+    font-weight: 300;
+  }
+
+  /* ── Prior spec ──────────────────────────────────── */
+  .prior-spec {
+    font-family: 'Courier New', monospace;
+    font-size: 7pt;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    padding: 5px 8px;
+    color: var(--navy);
+    margin-top: 4px;
+    line-height: 1.6;
+  }
+
+  /* ── Footer ──────────────────────────────────────── */
+  .footer {
+    background: var(--navy);
+    color: rgba(255,255,255,0.6);
+    padding: 8px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 7pt;
+    font-weight: 400;
+    letter-spacing: 0.03em;
+  }
+
+  .footer strong { color: rgba(255,255,255,0.9); }
+
+  /* ── Probability pill ────────────────────────────── */
+  .prob-pill {
+    display: inline-block;
+    background: var(--green);
+    color: white;
+    border-radius: 20px;
+    padding: 2px 8px;
+    font-size: 7pt;
+    font-weight: 700;
+  }
+
+  .prob-pill-r {
+    background: var(--red);
+  }
+
+  .divider { height: 1px; background: var(--border); margin: 2px 0; }
+</style>
+</head>
+<body>
+<div class="poster">
+
+  <!-- ══════════ HEADER ══════════ -->
+  <div class="header">
+    <div class="header-logo">
+      <div class="logo-circle">E</div>
+      <div class="logo-text">ESPOL<br>Estadística<br>Bayesiana</div>
+    </div>
+
+    <div class="header-center">
+      <div class="header-tag">Proyecto Final de Curso · I Semestre 2026</div>
+      <div class="header-title">Inferencia Bayesiana sobre el Riesgo de<br>Incumplimiento en Consumidores BNPL</div>
+      <div class="header-subtitle">
+        Análisis mediante modelos Normal-Normal, Regresión Lineal Bayesiana con MCMC y Beta-Binomial
+        aplicados a 10 000 consumidores de servicios <em>Buy Now, Pay Later</em>
+      </div>
+      <div class="badge-row">
+        <span class="badge">PyMC v5 · NUTS</span>
+        <span class="badge">ArviZ · Matplotlib</span>
+        <span class="badge">n = 10 000 obs.</span>
+        <span class="badge">3 Modelos Bayesianos</span>
+        <span class="badge">Solución Conjugada + MCMC</span>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="header-course">Escuela Superior Politécnica del Litoral</div>
+      <div class="header-authors">
+        Levi Parrales<br>
+        José Villegas<br>
+        Alessandro Paredes<br>
+        Diego Benítez
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ BODY: 4 columns ══════════ -->
+  <div class="body">
+
+    <!-- ══════ COL 1: Problema, Datos y Metodología ══════ -->
+    <div class="col">
+      <div class="sec-title">Problema y Pregunta de Investigación</div>
+
+      <div class="card card-navy">
+        <div class="card-label">Contexto</div>
+        <p>El sector BNPL (<em>Buy Now, Pay Later</em>) ha crecido exponencialmente, permitiendo fraccionar compras sin intereses. Servicios como Klarna, Afterpay y Affirm no reportan a agencias de crédito, dificultando evaluar el riesgo real de incumplimiento.</p>
+      </div>
+
+      <div class="card card-blue">
+        <div class="card-label">Pregunta de investigación</div>
+        <div class="card-title">¿Qué factores demográficos, laborales y de comportamiento financiero explican el puntaje crediticio de los usuarios BNPL y cómo varía entre grupos de riesgo?</div>
+      </div>
+
+      <div class="sec-title">Objetivos</div>
+      <div class="card">
+        <ul>
+          <li>Estimar bayesianamente el Credit_Score por grupo de riesgo (Normal-Normal).</li>
+          <li>Identificar predictores del Credit_Score con incertidumbre cuantificada (MCMC).</li>
+          <li>Comparar tasas de pagos tardíos por tipo de empleo (Beta-Binomial).</li>
+          <li>Evaluar implicaciones éticas del uso de modelos en scoring crediticio.</li>
+        </ul>
+      </div>
+
+      <div class="sec-title">Dataset</div>
+      <div class="kpi-row">
+        <div class="kpi"><div class="kpi-val">10k</div><div class="kpi-lbl">observaciones</div></div>
+        <div class="kpi"><div class="kpi-val">11</div><div class="kpi-lbl">variables</div></div>
+        <div class="kpi"><div class="kpi-val">88%</div><div class="kpi-lbl">bajo riesgo</div></div>
+        <div class="kpi"><div class="kpi-val">663.7</div><div class="kpi-lbl">Credit Score μ</div></div>
+      </div>
+
+      <div class="sec-title">Variable Principal</div>
+      <div class="card card-blue">
+        <div class="card-label">Credit_Score — Justificación</div>
+        <ul>
+          <li>Medida cuantitativa continua estándar de solvencia financiera (rango 300–850).</li>
+          <li>Distribución aproximadamente normal (sesgo = −0.66).</li>
+          <li>Correlación directa con Default_Risk (r = −0.41).</li>
+          <li>Sin problemas de inflación de ceros (a diferencia de BNPL_Debt).</li>
+        </ul>
+      </div>
+
+      <div class="sec-title">Cadena Argumental</div>
+      <div class="chain">
+        <div class="chain-box">Estado<br>laboral</div>
+        <div class="chain-arrow">→</div>
+        <div class="chain-box">Pagos<br>tardíos</div>
+        <div class="chain-arrow">→</div>
+        <div class="chain-box">Credit<br>Score</div>
+        <div class="chain-arrow">→</div>
+        <div class="chain-box">Riesgo<br>incump.</div>
+      </div>
+    </div>
+
+    <!-- ══════ COL 2: Modelos Bayesianos y Priors ══════ -->
+    <div class="col">
+      <div class="sec-title">Modelos Bayesianos</div>
+
+      <!-- Modelo 1 -->
+      <div class="card card-blue">
+        <div class="card-label">Paso 1 — Normal-Normal (Conjugado)</div>
+        <div class="card-title">Inferencia sobre la media del Credit_Score por grupo de riesgo</div>
+        <div class="prior-spec">
+          Verosimilitud: Y_i | μ_k ~ Normal(μ_k, σ_k²)<br>
+          Prior: μ_k ~ Normal(650, 100²)<br>
+          Posterior: μ_k|y ~ Normal(μₙ, τₙ²)<br>
+          τₙ² = (1/τ₀² + n_k/σ̂²)⁻¹
+        </div>
+      </div>
+
+      <!-- Modelo 2 -->
+      <div class="card" style="border-left:4px solid var(--blue);">
+        <div class="card-label">Paso 2 — Regresión Lineal Bayesiana (MCMC)</div>
+        <div class="card-title">Predictores del Credit_Score — NUTS en PyMC</div>
+        <div class="prior-spec">
+          Credit_Score_i ~ Normal(μᵢ, σ²)<br>
+          μᵢ = β₀ + β₁·Income_std + β₂·Age_std<br>
+              + β₃·Loans_std + β₄·AvgTx_std<br>
+              + β₅·LatePayment + γ_Employment<br>
+          Priors: βⱼ ~ N(0, 50²) · σ ~ HalfNormal(80)<br>
+          4 cadenas · 1 000 tune + 1 000 draw = 4 000 muestras
+        </div>
+      </div>
+
+      <!-- Modelo 3 -->
+      <div class="card" style="border-left:4px solid var(--teal);">
+        <div class="card-label">Paso 3 — Beta-Binomial (Conjugado)</div>
+        <div class="card-title">Tasa de pagos tardíos por estado laboral</div>
+        <div class="prior-spec">
+          X_k | π_k ~ Binomial(n_k, π_k)<br>
+          Prior: π_k ~ Beta(1,1) = Uniforme(0,1)<br>
+          Posterior: π_k|datos ~ Beta(1+X_k, 1+n_k−X_k)<br>
+          Comparaciones: Monte Carlo (N=500 000)
+        </div>
+      </div>
+
+      <div class="sec-title">Descriptivo: Credit_Score por Grupo</div>
+      <img src="../figuras/fig3_credit_score_por_riesgo.png" alt="Distribución Credit Score" style="max-height:160px;">
+      <div class="img-cap">Distribución del Credit_Score por nivel de Default_Risk (violin + boxplot). Diferencia Low–High ≈ 109 pts.</div>
+
+      <div class="sec-title">Diagnóstico MCMC</div>
+      <div class="card card-result">
+        <div class="card-label">Criterios de convergencia — ✅ Todos aprobados</div>
+        <table>
+          <tbody>
+            <tr><td><strong>R̂ máximo</strong></td><td>1.0013 &lt; 1.01 ✓</td></tr>
+            <tr><td><strong>ESS bulk mínimo</strong></td><td>2 675 &gt; 400 ✓</td></tr>
+            <tr><td><strong>Divergencias</strong></td><td>0 en 4 cadenas ✓</td></tr>
+            <tr><td><strong>Tiempo</strong></td><td>~48 seg. (NUTS secuencial)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══════ COL 3: Resultados ══════ -->
+    <div class="col">
+      <div class="sec-title">Resultado 1 — Normal-Normal</div>
+
+      <table>
+        <thead><tr><th>Grupo</th><th>μₙ</th><th>IC 95%</th><th>P(menor)</th></tr></thead>
+        <tbody>
+          <tr class="ok-row"><td>Low</td><td><strong>675.3</strong></td><td>[673.9, 676.8]</td><td>—</td></tr>
+          <tr><td>Medium</td><td>587.4</td><td>[581.0, 593.8]</td><td>P=1.00</td></tr>
+          <tr class="highlight-row"><td>High</td><td>566.3</td><td>[559.4, 573.3]</td><td>P=1.00</td></tr>
+        </tbody>
+      </table>
+      <div class="card card-result" style="margin-top:6px;">
+        <p><span class="result-big result-blue">109</span><br>
+        <strong>puntos de diferencia</strong> entre grupos Low y High<br>
+        IC 95%: [101.95, 116.03] · <span class="prob-pill">P = 1.000000</span></p>
+        <p style="margin-top:4px; font-size:7pt; color:var(--gray);">Certeza bayesiana prácticamente total. El prior débilmente informativo tiene mínima influencia frente a los 8 500+ datos por grupo.</p>
+      </div>
+
+      <img src="../figuras/fig6_normal_normal_posteriors.png" alt="Posteriors NN" style="max-height:130px; margin:4px 0;">
+      <div class="img-cap">Distribuciones posteriores de μ_k por grupo. IC 95% extremadamente estrechos.</div>
+
+      <div class="sec-title">Resultado 2 — Coeficientes de Regresión MCMC</div>
+      <table>
+        <thead><tr><th>Predictor</th><th>β media</th><th>IC 95%</th><th>Sig.</th></tr></thead>
+        <tbody>
+          <tr><td>Intercepto</td><td>705.65</td><td>[703.9, 707.5]</td><td>—</td></tr>
+          <tr><td>Ingreso (std)</td><td>+1.32</td><td>[−0.5, +3.2]</td><td>❌</td></tr>
+          <tr><td>Edad (std)</td><td>+0.18</td><td>[−0.9, +1.3]</td><td>❌</td></tr>
+          <tr><td>Préstamos (std)</td><td>+0.80</td><td>[−0.3, +1.9]</td><td>❌</td></tr>
+          <tr><td>Val. transac. (std)</td><td>−0.30</td><td>[−1.4, +0.8]</td><td>❌</td></tr>
+          <tr class="highlight-row"><td><strong>Pago tardío</strong></td><td><strong>−43.41</strong></td><td>[−46.2, −40.8]</td><td>✅</td></tr>
+          <tr class="highlight-row"><td><strong>Student</strong></td><td><strong>−88.62</strong></td><td>[−93.1, −84.1]</td><td>✅</td></tr>
+          <tr class="highlight-row"><td><strong>Freelancer</strong></td><td><strong>−47.15</strong></td><td>[−50.5, −43.8]</td><td>✅</td></tr>
+          <tr class="highlight-row"><td><strong>Unemployed</strong></td><td><strong>−133.92</strong></td><td>[−140.4, −127.4]</td><td>✅</td></tr>
+        </tbody>
+      </table>
+      <div class="card card-warn" style="margin-top:6px;">
+        <p><strong>Hallazgo contraintuitivo:</strong> Las variables continuas económicas (ingreso, edad, préstamos) NO tienen efecto estadísticamente significativo. El tipo de empleo y el historial de pagos son los únicos predictores con evidencia bayesiana real.</p>
+      </div>
+    </div>
+
+    <!-- ══════ COL 4: Resultados Cont. + Conclusiones ══════ -->
+    <div class="col">
+      <div class="sec-title">Resultado 3 — Beta-Binomial (Pagos Tardíos)</div>
+
+      <img src="../figuras/fig9_forest_plot_coeficientes.png" alt="Forest plot" style="max-height:130px;">
+      <div class="img-cap">Forest plot bayesiano. Rojo = IC excluye 0 (efecto negativo significativo). Gris = IC incluye 0.</div>
+
+      <table>
+        <thead><tr><th>Grupo</th><th>n</th><th>π posterior</th><th>IC 95%</th><th>vs. Employed</th></tr></thead>
+        <tbody>
+          <tr class="ok-row"><td><strong>Employed</strong></td><td>6 029</td><td><strong>15.0%</strong></td><td>[14.1%, 15.9%]</td><td>— Referencia</td></tr>
+          <tr><td>Freelancer</td><td>1 495</td><td>26.5%</td><td>[24.3%, 28.7%]</td><td><span class="prob-pill">P=1.00</span></td></tr>
+          <tr><td>Student</td><td>1 968</td><td>44.2%</td><td>[42.0%, 46.4%]</td><td><span class="prob-pill">P=1.00</span></td></tr>
+          <tr class="highlight-row"><td><strong>Unemployed</strong></td><td>508</td><td><strong>61.0%</strong></td><td>[56.7%, 65.2%]</td><td><span class="prob-pill">P=1.00</span></td></tr>
+        </tbody>
+      </table>
+
+      <div class="card card-danger">
+        <p>Los desempleados tienen una tasa de pagos tardíos de <strong>61%</strong> — <strong>4 veces</strong> mayor que los empleados formales (15%). Diferencia media: +0.46 pts porcentuales, IC 95%: [0.42, 0.50]. Probabilidad posterior = 1.0000.</p>
+      </div>
+
+      <img src="../figuras/fig12_comparaciones_proporciones.png" alt="Comparaciones proporciones" style="max-height:120px;">
+      <div class="img-cap">Distribuciones posteriores de la diferencia (π_k − π_Employed). Toda la masa está en zona positiva.</div>
+
+      <div class="sec-title">Predicciones Bayesianas</div>
+      <table>
+        <thead><tr><th>Perfil</th><th>Credit Score</th><th>IC 95%</th></tr></thead>
+        <tbody>
+          <tr class="ok-row"><td>Empleado, sin pago tardío</td><td><strong>706.2</strong></td><td>[599, 814]</td></tr>
+          <tr><td>Estudiante típico</td><td>615.1</td><td>[508, 724]</td></tr>
+          <tr class="highlight-row"><td>Desempleado + pagos tardíos</td><td><strong>527.4</strong></td><td>[420, 638]</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:7pt; color:var(--gray); margin-top:3px;">Diferencia predicha entre perfiles extremos: <strong>179 puntos</strong>. Los IC 95% anchos reflejan honestamente la incertidumbre individual — ventaja clave del enfoque bayesiano.</p>
+
+      <div class="sec-title">Conclusiones</div>
+      <div class="card card-navy">
+        <div class="card-label">Hallazgos integrados</div>
+        <ul>
+          <li>Diferencia entre grupos de riesgo: <strong>109 pts</strong>, P posterior = 1.00.</li>
+          <li>Ser desempleado reduce el Credit_Score en <strong>134 pts</strong> (IC 95%: [−140, −127]).</li>
+          <li>El historial de pagos tardíos reduce el Credit_Score en <strong>43 pts</strong> adicionales.</li>
+          <li>Los desempleados tienen una tasa de pagos tardíos <strong>4× mayor</strong> que los empleados.</li>
+          <li>El ingreso y la edad no predicen significativamente el Credit_Score.</li>
+        </ul>
+      </div>
+
+      <div class="sec-title">Implicaciones Éticas</div>
+      <div class="card card-warn">
+        <ul>
+          <li><strong>Discriminación estadística:</strong> usar el tipo de empleo puede excluir a poblaciones vulnerables aunque su comportamiento de pago futuro sea diferente al histórico.</li>
+          <li>Los modelos predictivos deben complementarse con métricas de equidad (<em>fairness</em>).</li>
+          <li>Reguladores financieros deben delimitar qué variables son admisibles en scoring automático.</li>
+        </ul>
+      </div>
+    </div>
+
+  </div><!-- /body -->
+
+  <!-- ══════════ FOOTER ══════════ -->
+  <div class="footer">
+    <span><strong>ESPOL</strong> · Escuela Superior Politécnica del Litoral</span>
+    <span><strong>Estadística Bayesiana</strong> · I Semestre 2026 · Proyecto Final de Curso</span>
+    <span>Levi Parrales · José Villegas · Alessandro Paredes · Diego Benítez</span>
+  </div>
+
+</div><!-- /poster -->
+</body>
+</html>

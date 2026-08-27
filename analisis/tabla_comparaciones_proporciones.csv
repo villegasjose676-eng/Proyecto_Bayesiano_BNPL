@@ -1,0 +1,4 @@
+Comparación,Probabilidad,Diferencia media,IC 95% diferencia inf.,IC 95% diferencia sup.
+π_Freelancer > π_Employed,1.0,0.1148,0.091,0.1392
+π_Student > π_Employed,1.0,0.2919,0.2683,0.3157
+π_Unemployed > π_Employed,1.0,0.4601,0.4165,0.5029

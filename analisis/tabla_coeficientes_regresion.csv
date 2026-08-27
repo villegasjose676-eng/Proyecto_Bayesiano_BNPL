@@ -1,0 +1,11 @@
+Parámetro,Media posterior,Std posterior,IC 95% inf.,IC 95% sup.,R̂
+Intercepto (β₀),705.652,0.906,703.865,707.46,1.0013
+Ingreso anual (estandarizado),1.324,0.923,-0.506,3.162,1.0003
+Edad (estandarizada),0.184,0.563,-0.908,1.27,1.0002
+Préstamos BNPL activos (std),0.797,0.559,-0.31,1.915,0.9997
+Valor prom. transacción (std),-0.303,0.565,-1.408,0.81,1.0005
+Historial pago tardío (Sí=1),-43.411,1.359,-46.184,-40.801,1.0003
+Estado: Student (vs. Employed),-88.623,2.316,-93.069,-84.055,1.0009
+Estado: Freelancer (vs. Employed),-47.153,1.702,-50.498,-43.802,1.0002
+Estado: Unemployed (vs. Employed),-133.918,3.279,-140.424,-127.352,1.0008
+Desv. típica residual (σ),55.036,0.407,54.231,55.836,1.0004
